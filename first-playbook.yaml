@@ -1,0 +1,13 @@
+---
+- name: configure nginx on ec2 servers
+  hosts: aws
+  tasks:
+    - name: install nginx
+      apt:
+       name: nginx
+       state: latest
+      become: true
+    - name: enable nginx
+      service:
+        name: nginx
+        state: started

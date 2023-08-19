@@ -1,0 +1,59 @@
+---
+- name: init node project
+  hosts: aws
+  tasks:
+    - name: update apt repo and cahce
+      apt:
+        update_cache: yes
+        force_apt_get: yes
+      become: true
+    - name: install node & npm
+      apt:
+        pkg:
+          - acl
+          - nodejs
+          - npm
+      become: true
+
+- name: create admin user
+  hosts: aws
+  vars_files:
+    - vars/project-vars
+  tasks:
+    - name: create user
+      user:
+        name: "{{ user_name }}"
+        comment: user admin
+        group: admin
+        create_home: True
+      become: True
+
+- name: deploy nodejs app
+  hosts: aws
+  become: True
+  become_user: "{{ user_name }}"
+  vars_files:
+    - vars/project-vars
+  tasks:
+    - name: copy node project to remote host
+      copy:
+        src: "{{ location }}"
+        dest: "{{ user_home_dir }}"
+    - name: unzip file
+      unarchive:
+        src: "{{ location }}"
+        dest: "{{ user_home_dir }}"
+        remote_src: yes
+    - name: install dependencies
+      npm:
+        path: "{{ user_home_dir }}/node_project"
+    - name: start server
+      command:
+        chdir: "{{ user_home_dir }}/node_project"
+        cmd: node index.js
+      async: 1000
+      poll: 0
+    - name: ensure app is running
+      shell: ps aux | grep node
+      register: app_status
+    - debug: msg={{app_status.stdout_lines}}

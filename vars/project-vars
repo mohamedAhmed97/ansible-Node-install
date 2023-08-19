@@ -1,0 +1,4 @@
+user_name: ahmed
+version: 1.0.0
+location: ~/node_project.tar.xz
+user_home_dir: /home/{{user_name}}
